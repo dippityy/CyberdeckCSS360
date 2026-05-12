@@ -1,0 +1,37 @@
+name: Format Code
+
+on: [push, pull_request]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Setup Python & Format Backend
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Python Formatter
+        run: pip install black isort
+      - name: Run Black & Isort
+        run: |
+          isort .
+          black .
+
+      # 2. Setup Node & Format Frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Prettier
+        run: npm install -g prettier
+      - name: Run Prettier
+        run: prettier --write "**/*.{js,jsx,ts,tsx,css,json,md}"
+
+      # 3. Commit Changes
+      - name: Commit & Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: auto-format code"

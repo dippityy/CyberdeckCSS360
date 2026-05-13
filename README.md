@@ -1,12 +1,12 @@
 # CyberdeckCSS360
-Have to add .env file in api folder containing: 
+
+Have to add .env file in api folder containing:
 FLASK_APP=api.py
 FLASK_ENV=development
 SPOTIPY_CLIENT_ID=your_client_id
 SPOTIPY_CLIENT_SECRET=your_client_secret
 SPOTIPY_REDIRECT_URI=http://localhost:5000/callback
 REACT_URL=http://localhost:5173
-
 
 1. git clone https://github.com/dippityy/CyberdeckCSS360
 2. cd CyberdeckCSS360
@@ -20,4 +20,4 @@ REACT_URL=http://localhost:5173
 10. npm install
 11. npm run dev
 
-o + enter to open localhost 
+o + enter to open localhost

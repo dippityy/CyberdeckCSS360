@@ -164,56 +164,56 @@
   }
 }
 
-body  {
+body {
   background-color: #000000;
 }
 
 #playback-controls {
-    display: flex;
-    align-items: center;
-    gap: clamp(48px, 7vw, 96px);
+  display: flex;
+  align-items: center;
+  gap: clamp(48px, 7vw, 96px);
 }
 
 #playback-controls button {
-    border: none;
-    background: none;
-    color: #FFFFFF;
-    padding: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  border: none;
+  background: none;
+  color: #ffffff;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #playback-controls .btn-skip img {
-    width: clamp(32px, 3.2vw, 50px);
-    height: auto;
+  width: clamp(32px, 3.2vw, 50px);
+  height: auto;
 }
 
 #playback-controls .btn-play img {
-    width: clamp(64px, 7vw, 100px);
-    height: auto;
+  width: clamp(64px, 7vw, 100px);
+  height: auto;
 }
 
 #browse {
-    position: absolute;
-    top: clamp(28px, 4vh, 64px);
-    right: clamp(20px, 3vw, 48px);
-    z-index: 10;
+  position: absolute;
+  top: clamp(28px, 4vh, 64px);
+  right: clamp(20px, 3vw, 48px);
+  z-index: 10;
 }
 
 #browse button {
-    border: none;
-    background: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #browse button img {
-    width: clamp(40px, 5vw, 80px);
-    height: auto;
+  width: clamp(40px, 5vw, 80px);
+  height: auto;
 }
 
 .playlist-browser {
@@ -247,7 +247,7 @@ body  {
 }
 
 .playlist-card h3 {
-   cursor: pointer;
+  cursor: pointer;
 }
 
 .btn-back img {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 import "../App.css";
 import previousButton from "../assets/previous.png";
 import playButton from "../assets/play.png";
@@ -123,9 +123,9 @@ function Playback() {
         </div>
 
         <div id="browse">
-            <button onClick={() => navigate('/browse')}>
-                <img src={browseButton} alt="Browse" />
-            </button>
+          <button onClick={() => navigate("/browse")}>
+            <img src={browseButton} alt="Browse" />
+          </button>
         </div>
       </div>
     </div>

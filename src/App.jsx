@@ -1,6 +1,6 @@
-import { Routes, Route } from 'react-router-dom'
-import Playback from './pages/Playback'
-import PlaylistBrowser from './pages/PlaylistBrowser'
+import { Routes, Route } from "react-router-dom";
+import Playback from "./pages/Playback";
+import PlaylistBrowser from "./pages/PlaylistBrowser";
 
 function App() {
   return (
@@ -8,7 +8,7 @@ function App() {
       <Route path="/" element={<Playback />} />
       <Route path="/browse" element={<PlaylistBrowser />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

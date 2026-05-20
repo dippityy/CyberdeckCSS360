@@ -1,0 +1,157 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. STATIC ANALYSIS (lint)
+  # ─────────────────────────────────────────────
+  lint:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull latest code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Run ESLint (JS/React static analysis)
+        run: npm run lint
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install flake8 (Python static analysis)
+        run: pip install flake8
+
+      - name: Run flake8 on API
+        run: flake8 api/ --max-line-length=100 --exclude=api/venv
+
+  # ─────────────────────────────────────────────
+  # 2. TESTS (unit, integration, smoke)
+  # ─────────────────────────────────────────────
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Pull latest code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          cd api
+          pip install -r requirements.txt
+          pip install pytest pytest-flask
+
+      - name: Run unit tests
+        run: |
+          cd api
+          pytest tests/unit/ -v
+
+      - name: Run integration tests
+        run: |
+          cd api
+          pytest tests/integration/ -v
+
+      - name: Run smoke tests
+        run: |
+          cd api
+          pytest tests/smoke/ -v
+
+  # ─────────────────────────────────────────────
+  # 3. BUILD (Docker image)
+  # ─────────────────────────────────────────────
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    # Only build & deploy on pushes to main (not pull requests)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Pull latest code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/cyberdeckcss360:latest
+
+  # ─────────────────────────────────────────────
+  # 4. DEPLOY (to Raspberry Pi via SSH)
+  # ─────────────────────────────────────────────
+  deploy:
+    name: Deploy to Raspberry Pi
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PI_HOST }}
+          username: ${{ secrets.PI_USER }}
+          key: ${{ secrets.PI_SSH_KEY }}
+          script: |
+            cd ~/CyberdeckCSS360
+            git pull origin main
+            docker pull ${{ secrets.DOCKER_USERNAME }}/cyberdeckcss360:latest
+            docker compose down
+            docker compose up -d
+
+  # ─────────────────────────────────────────────
+  # 5. VERIFY (smoke test the live deployment)
+  # ─────────────────────────────────────────────
+  verify:
+    name: Verify Deployment
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for app to start
+        run: sleep 15
+
+      - name: Check app is reachable
+        run: |
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.PI_HOST }}:5173)
+          echo "Frontend returned HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Frontend health check FAILED"
+            exit 1
+          fi
+
+      - name: Check API is reachable
+        run: |
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.PI_HOST }}:5000)
+          echo "API returned HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "API health check FAILED"
+            exit 1
+          fi
+
+      - name: Deployment verified!
+        run: echo "✅ Deployment successful — app is live on the Raspberry Pi."

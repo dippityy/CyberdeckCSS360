@@ -1,23 +1,85 @@
-# CyberdeckCSS360
-Have to add .env file in api folder containing: 
-FLASK_APP=api.py
-FLASK_ENV=development
-SPOTIPY_CLIENT_ID=your_client_id
-SPOTIPY_CLIENT_SECRET=your_client_secret
-SPOTIPY_REDIRECT_URI=http://localhost:5000/callback
-REACT_URL=http://localhost:5173
+## Running on Raspberry Pi
 
+### First Time Setup
 
-1. git clone https://github.com/dippityy/CyberdeckCSS360
-2. cd CyberdeckCSS360
-3. cd api
-4. python -m venv venv
-5. source venv/bin/activate
-6. pip install -r requirements
-7. python api.py
-8. open new terminal
-9. cd CyberdeckCSS360
-10. npm install
-11. npm run dev
+**1. Clone the repo**
+```bash
+git clone https://github.com/yourusername/CyberdeckCSS360.git
+cd CyberdeckCSS360
+```
 
-o + enter to open localhost 
+**2. Install system dependencies**
+```bash
+sudo apt-get update
+sudo apt-get install -y python3 python3-pip python3-venv nodejs npm
+```
+
+**3. Set up Python**
+```bash
+cd api
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+deactivate
+cd ..
+```
+
+**4. Add your Spotify credentials**
+```bash
+nano api/.env
+```
+
+**5. Build the frontend**
+```bash
+npm install
+npm run build
+```
+
+**6. Make start script executable**
+```bash
+chmod +x start.sh
+```
+
+**7. Set up Flask to run on boot**
+```bash
+sudo cp myapp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable myapp
+sudo systemctl start myapp
+```
+
+**8. Set up Chromium to open on boot**
+```bash
+mkdir -p /home/pi/.config/autostart
+cp cyberdeck.desktop /home/pi/.config/autostart/
+```
+
+**9. Reboot**
+```bash
+sudo reboot
+```
+
+The app will launch automatically on every boot.
+
+### Spotify Setup
+Make sure `http://127.0.0.1:5000/callback` is added as a redirect URI in your 
+[Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+
+On first boot you'll be prompted to log in to Spotify — this only happens once.
+The token is cached and reused on every subsequent boot.
+
+### Updating
+When you push new code, on the Pi run:
+```bash
+cd CyberdeckCSS360
+git pull
+npm run build
+sudo systemctl restart myapp
+```
+
+### Useful Commands
+```bash
+sudo systemctl status myapp     # check if Flask is running
+sudo systemctl restart myapp    # restart after changes
+journalctl -u myapp -f          # live logs
+```

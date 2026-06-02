@@ -8,7 +8,7 @@ import os
 import random
 
 from flask import Flask, request, redirect, jsonify, send_from_directory
-from pathlib import Path
+#from pathlib import Path
 from flask_cors import CORS
 from dotenv import load_dotenv
 from spotipy import Spotify
@@ -19,7 +19,7 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app = Flask(__name__,static_folder=os.path.join(BASE_DIR, "../dist"),
+app = Flask(__name__, static_folder=os.path.join(BASE_DIR, "../dist"),
             static_url_path="")
 CORS(app, supports_credentials=True)
 
@@ -150,7 +150,6 @@ def playback():
                 "cover_URL": track["album"]["images"][0]["url"]
             })
     return jsonify({"auth_required": False, "message": "No playback information available"})
-
 
 
 @app.route('/api/playpause', methods=["POST"])
@@ -363,6 +362,7 @@ def get_albums():
             }
         )
     return jsonify({"auth_required": False, "albums": albums})
+
 
 @app.route('/api/logout')
 def logout():

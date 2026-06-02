@@ -136,11 +136,20 @@ def playback():
             "cover_URL": playback_info["item"]["album"]["images"][0]["url"]
         })
 
-    return jsonify({
-        "auth_required": False,
-        "message": "No track currently playing",
-        "is_playing": False
-    })
+    last_track_played = sp.current_user_recently_played(limit=1)
+    if last_track_played and last_track_played["items"]:
+        recent_item = last_track_played["items"][0]
+        track = recent_item["track"]
+        return jsonify({
+                "auth_required": False,
+                "track_name": track["name"],
+                "artist_name": track["artists"][0]["name"],
+                "is_playing": False,
+                "progress_ms": 0,
+                "duration_ms": track["duration_ms"],
+                "cover_URL": track["album"]["images"][0]["url"]
+            })
+    return jsonify({"auth_required": False, "message": "No playback information available"})
 
 
 

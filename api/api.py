@@ -8,7 +8,6 @@ import os
 import random
 
 from flask import Flask, request, redirect, jsonify, send_from_directory
-#from pathlib import Path
 from flask_cors import CORS
 from dotenv import load_dotenv
 from spotipy import Spotify
@@ -152,6 +151,7 @@ def playback():
                 "cover_URL": track["album"]["images"][0]["url"]
             })
     return jsonify({"auth_required": False, "message": "No playback information available"})
+
 
 @app.route('/api/playpause', methods=["POST"])
 def toggleplayback():

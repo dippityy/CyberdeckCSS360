@@ -37,6 +37,8 @@ SCOPE = (
     "user-read-recently-played "
     "playlist-read-private "
     "playlist-read-collaborative "
+    "playlist-modify-public "
+    "playlist-modify-private "
     "user-library-read"
 )
 
@@ -150,7 +152,6 @@ def playback():
                 "cover_URL": track["album"]["images"][0]["url"]
             })
     return jsonify({"auth_required": False, "message": "No playback information available"})
-
 
 @app.route('/api/playpause', methods=["POST"])
 def toggleplayback():
@@ -362,6 +363,54 @@ def get_albums():
             }
         )
     return jsonify({"auth_required": False, "albums": albums})
+
+
+@app.route('/api/play-track', methods=["POST"])
+def play_track():
+    """Start playback of a single track immediately."""
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        return jsonify({"auth_required": True, "auth_url": f"{FLASK_URL}/login"}), 401
+    uri = (request.json or {}).get("uri")
+    if not uri:
+        return jsonify({"error": "uri required"}), 400
+    try:
+        sp.start_playback(uris=[uri])
+        return jsonify({"success": True})
+    except Exception:
+        app.logger.exception("Failed to start playback for track")
+        return jsonify({"error": "Upstream Spotify error"}), 502
+
+
+@app.route('/api/queue', methods=["POST"])
+def add_to_queue():
+    """Append a track to the Spotify queue."""
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        return jsonify({"auth_required": True, "auth_url": f"{FLASK_URL}/login"}), 401
+    uri = (request.json or {}).get("uri")
+    if not uri:
+        return jsonify({"error": "uri required"}), 400
+    try:
+        sp.add_to_queue(uri)
+        return jsonify({"success": True})
+    except Exception:
+        app.logger.exception("Failed to add track to queue")
+        return jsonify({"error": "Upstream Spotify error"}), 502
+
+
+@app.route('/api/playlists/<playlist_id>/add', methods=["POST"])
+def add_to_playlist(playlist_id):
+    """Add a track to a specific playlist."""
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        return jsonify({"auth_required": True, "auth_url": f"{FLASK_URL}/login"}), 401
+    uri = (request.json or {}).get("uri")
+    if not uri:
+        return jsonify({"error": "uri required"}), 400
+    try:
+        sp.playlist_add_items(playlist_id, [uri])
+        return jsonify({"success": True})
+    except Exception:
+        app.logger.exception("Failed to add track to playlist")
+        return jsonify({"error": "Upstream Spotify error"}), 502
 
 
 @app.route('/api/logout')

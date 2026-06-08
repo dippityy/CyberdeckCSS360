@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import "./PlaylistsAlbums.css";
+import PlaylistTracks from "./PlaylistTracks";
 
 function PlaylistBrowser() {
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(null); // { id, name }
 
   useEffect(() => {
     fetch("/api/playlists", { credentials: "include" })
@@ -19,7 +21,9 @@ function PlaylistBrowser() {
       });
   }, []);
 
-  const playPlaylist = async (playlistId) => {
+  const playPlaylist = async (e, playlistId) => {
+    // Stop click from also opening the drilldown
+    e.stopPropagation();
     try {
       await fetch("/api/play-browse", {
         method: "POST",
@@ -34,6 +38,18 @@ function PlaylistBrowser() {
     }
   };
 
+  // ── Drilldown view ────────────────────────────────────────
+  if (selected) {
+    return (
+      <PlaylistTracks
+        playlistId={selected.id}
+        playlistName={selected.name}
+        onBack={() => setSelected(null)}
+      />
+    );
+  }
+
+  // ── Grid view ─────────────────────────────────────────────
   return (
     <div className="browser">
       {loading && <p>Loading...</p>}
@@ -41,9 +57,18 @@ function PlaylistBrowser() {
       {!loading && (
         <div className="browser-grid">
           {playlists.map((playlist) => (
-            <div key={playlist.id} className="browse-card">
+            <div
+              key={playlist.id}
+              className="browse-card"
+              onClick={() => setSelected({ id: playlist.id, name: playlist.name })}
+              style={{ cursor: "pointer" }}
+              title={`Browse "${playlist.name}"`}
+            >
               {playlist.cover_url && (
-                <button onClick={() => playPlaylist(playlist.id)}>
+                <button
+                  onClick={(e) => playPlaylist(e, playlist.id)}
+                  title="Play now"
+                >
                   <img
                     src={playlist.cover_url}
                     alt={playlist.name}
@@ -51,7 +76,7 @@ function PlaylistBrowser() {
                   />
                 </button>
               )}
-              <h3 onClick={() => playPlaylist(playlist.id)}>{playlist.name}</h3>
+              <h3>{playlist.name}</h3>
               <p>By: {playlist.owner}</p>
             </div>
           ))}

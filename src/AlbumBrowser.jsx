@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import "./PlaylistsAlbums.css";
+import AlbumTracks from "./AlbumTracks";
 
 function AlbumBrowser() {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(null); // { id }
 
   useEffect(() => {
     fetch("/api/albums", { credentials: "include" })
@@ -22,7 +24,8 @@ function AlbumBrowser() {
       });
   }, []);
 
-  const playAlbum = async (albumUri) => {
+  const playAlbum = async (e, albumUri) => {
+    e.stopPropagation();
     try {
       await fetch("/api/play-browse", {
         method: "POST",
@@ -35,6 +38,17 @@ function AlbumBrowser() {
     }
   };
 
+  // ── Drilldown view ─────────────────────────────────────────
+  if (selected) {
+    return (
+      <AlbumTracks
+        albumId={selected.id}
+        onBack={() => setSelected(null)}
+      />
+    );
+  }
+
+  // ── Grid view ──────────────────────────────────────────────
   return (
     <div className="browser">
       {loading && <p>Loading…</p>}
@@ -42,9 +56,15 @@ function AlbumBrowser() {
       {!loading && !error && (
         <div className="browser-grid">
           {albums.map((album) => (
-            <div key={album.id} className="browse-card">
+            <div
+              key={album.id}
+              className="browse-card"
+              onClick={() => setSelected({ id: album.id })}
+              style={{ cursor: "pointer" }}
+              title={`Browse "${album.name}"`}
+            >
               {album.cover_url && (
-                <button onClick={() => playAlbum(album.uri)}>
+                <button onClick={(e) => playAlbum(e, album.uri)} title="Play now">
                   <img
                     src={album.cover_url}
                     alt={album.name}
@@ -52,7 +72,7 @@ function AlbumBrowser() {
                   />
                 </button>
               )}
-              <h3 onClick={() => playAlbum(album.uri)}>{album.name}</h3>
+              <h3>{album.name}</h3>
               <p>{album.artist}</p>
             </div>
           ))}

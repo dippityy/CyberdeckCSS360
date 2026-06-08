@@ -367,6 +367,63 @@ def get_albums():
     return jsonify({"auth_required": False, "albums": albums})
 
 
+@app.route("/api/albums/<album_id>/tracks")
+def get_album_tracks(album_id):
+    """
+    Retrieves all tracks for a specific album plus album metadata.
+
+    Returns:
+        Response: JSON with album info and list of tracks.
+    """
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        return jsonify({"auth_required": True, "auth_url": f"{FLASK_URL}/login"})
+
+    try:
+        album = sp.album(album_id)
+        images = album.get("images") or []
+        artists = album.get("artists") or []
+
+        tracks = []
+        results = album.get("tracks", {})
+        while True:
+            for t in results.get("items", []):
+                if not t or not t.get("id"):
+                    continue
+                t_artists = t.get("artists") or []
+                tracks.append({
+                    "id": t["id"],
+                    "name": t["name"],
+                    "uri": t["uri"],
+                    "duration_ms": t.get("duration_ms", 0),
+                    "track_number": t.get("track_number", len(tracks) + 1),
+                    "artist": (t_artists[0]["name"] if t_artists
+                               else artists[0]["name"] if artists
+                               else "Unknown"),
+                    "cover_url": images[0]["url"] if images else None,
+                })
+            if not results.get("next"):
+                break
+            results = sp.next(results)
+
+        return jsonify({
+            "auth_required": False,
+            "album": {
+                "id": album["id"],
+                "name": album["name"],
+                "uri": album["uri"],
+                "artist": artists[0]["name"] if artists else "Unknown",
+                "cover_url": images[0]["url"] if images else None,
+                "release_date": album.get("release_date", ""),
+                "total_tracks": album.get("total_tracks", len(tracks)),
+                "label": album.get("label", ""),
+            },
+            "tracks": tracks,
+        })
+    except Exception:
+        app.logger.exception("Failed to fetch album tracks")
+        return jsonify({"error": "Failed to fetch album tracks"}), 502
+
+
 @app.route('/api/play-track', methods=["POST"])
 def play_track():
     """Start playback of a single track immediately."""
@@ -484,6 +541,66 @@ def add_to_playlist(playlist_id):
     except Exception:
         app.logger.exception("Failed to add track to playlist")
         return jsonify({"error": "Upstream Spotify error"}), 502
+
+
+@app.route('/api/playlists/<playlist_id>/tracks')
+def get_playlist_tracks(playlist_id):
+    """
+    Retrieves all tracks for a specific playlist.
+
+    Returns:
+        Response: JSON with playlist metadata and list of tracks.
+    """
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        return jsonify({"auth_required": True, "auth_url": f"{FLASK_URL}/login"})
+
+    try:
+        playlist = sp.playlist(playlist_id)
+        tracks = []
+        offset = 0
+        limit = 100
+        while True:
+            results = sp.playlist_items(
+                playlist_id,
+                limit=limit,
+                offset=offset,
+                additional_types=("track",)
+            )
+            for entry in results.get("items", []):
+                track = entry.get("track") or entry.get("item")
+                if not track or not track.get("id"):
+                    continue
+                artists = track.get("artists") or []
+                album = track.get("album") or {}
+                images = album.get("images") or []
+                tracks.append({
+                    "id": track["id"],
+                    "name": track["name"],
+                    "uri": track["uri"],
+                    "duration_ms": track.get("duration_ms", 0),
+                    "artist": artists[0]["name"] if artists else "Unknown",
+                    "cover_url": images[0]["url"] if images else None,
+                })
+            if not results.get("next"):
+                break
+            offset += limit
+
+        images = playlist.get("images") or []
+        return jsonify({
+            "auth_required": False,
+            "playlist": {
+                "id": playlist["id"],
+                "name": playlist["name"],
+                "description": playlist.get("description", ""),
+                "cover_url": images[0]["url"] if images else None,
+                "owner": playlist.get("owner", {}).get("display_name", "Unknown"),
+                "total": playlist.get("tracks", {}).get("total", len(tracks)),
+            },
+            "tracks": tracks,
+        })
+    except Exception:
+        app.logger.exception("Failed to fetch playlist tracks")
+        return jsonify({"error": "Failed to fetch playlist tracks"}), 502
 
 
 @app.route('/api/logout')

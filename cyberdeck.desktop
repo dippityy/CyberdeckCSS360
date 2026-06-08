@@ -1,5 +1,5 @@
 [Desktop Entry]
 Type=Application
 Name=Cyberdeck
-Exec=bash -c "unclutter -idle 0 -root & until curl -s http://localhost:5000 > /dev/null; do sleep 1; done && chromium --kiosk --app=http://localhost:5000 --noerrdialogs --disable-infobars --touch-events=enabled --enable-pinch --disable-gpu"
+Exec=bash -c "xset s off && xset -dpms && xset s noblank && unclutter -idle 0 -root & until curl -s http://localhost:5000 > /dev/null; do sleep 1; done && chromium --kiosk --app=http://localhost:5000 --noerrdialogs --disable-infobars --touch-events=enabled --enable-pinch --disable-gpu"
 X-GNOME-Autostart-enabled=true

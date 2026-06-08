@@ -134,7 +134,8 @@ def playback():
             "is_playing": playback_info.get("is_playing", False),
             "progress_ms": playback_info.get("progress_ms", 0),
             "duration_ms": playback_info["item"].get("duration_ms", 0),
-            "cover_URL": cover_image[0].get("url", None) if cover_image else None
+            "cover_URL": cover_image[0].get("url", None) if cover_image else None,
+            "volume": playback_info.get("device", {}).get("volume_percent", 50)
         })
 
     last_track_played = sp.current_user_recently_played(limit=1)

@@ -27,6 +27,11 @@ cd ..
 **4. Add your Spotify credentials**
 ```bash
 nano api/.env
+FLASK_APP=api.py
+FLASK_ENV=development
+SPOTIPY_CLIENT_ID= your_client_id
+SPOTIPY_CLIENT_SECRET= your_secret
+SPOTIPY_REDIRECT_URI=http://localhost:5000/callback
 ```
 
 **5. Build the frontend**
@@ -74,7 +79,17 @@ npm install
 npm run build
 ```
 
-**3. Set up Python**
+**3. Add your Spotify credentials**
+```bash
+nano api/.env
+FLASK_APP=api.py
+FLASK_ENV=development
+SPOTIPY_CLIENT_ID= your_client_id
+SPOTIPY_CLIENT_SECRET= your_secret
+SPOTIPY_REDIRECT_URI=http://localhost:5000/callback
+```
+
+**4. Set up Python**
 ```bash
 cd api
 python3 -m venv venv
